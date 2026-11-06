@@ -17,6 +17,12 @@
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
       --btn-bg: #272c3d;
+
+      /* Eyeline dynamic variables (Default: Classic Dark) */
+      --eyeline-color: #f59e0b;
+      --eyeline-glow: rgba(245, 158, 11, 0.9);
+      --eyeline-badge-bg: #f59e0b;
+      --eyeline-badge-text: #000000;
     }
 
     * {
@@ -170,6 +176,39 @@
       background: #33394e;
     }
 
+    .shortcuts-hint {
+      margin-top: 16px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .shortcuts-hint kbd {
+      background: #11141c;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--panel-border);
+      color: #fff;
+    }
+
+    /* Footer di dalam kad */
+    .app-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--panel-border);
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    .app-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .app-footer a:hover {
+      text-decoration: underline;
+      color: var(--accent-hover);
+    }
+
     /* TELEPROMPTER FULLSCREEN OVERLAY */
     #prompterScreen {
       display: none;
@@ -204,7 +243,6 @@
       z-index: 2000;
     }
 
-    /* Counter-mirror the controls so buttons remain readable */
     #prompterScreen.mirror .prompter-nav {
       transform: scaleX(-1);
     }
@@ -266,27 +304,32 @@
       cursor: pointer;
     }
 
-    /* Eye-line indicator marker */
+    /* Penunjuk Eyeline - Lebih Tebal (4px), Berkilau & Kontras Tinggi */
     .eyeline-guide {
       position: fixed;
       top: 35%;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.35) 15%, rgba(245, 158, 11, 0.35) 85%, transparent);
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--eyeline-color) 6%, var(--eyeline-color) 94%, transparent);
+      box-shadow: 0 0 14px var(--eyeline-glow);
       pointer-events: none;
       z-index: 1500;
     }
 
     .eyeline-guide::after {
-      content: "EYELINE";
+      content: "EYELINE ◄";
       position: absolute;
       right: 20px;
-      top: -10px;
-      font-size: 0.7rem;
-      letter-spacing: 1px;
-      color: rgba(245, 158, 11, 0.5);
+      top: -12px;
+      font-size: 0.72rem;
+      letter-spacing: 1.5px;
+      background: var(--eyeline-badge-bg);
+      color: var(--eyeline-badge-text);
+      padding: 3px 8px;
+      border-radius: 5px;
       font-weight: 800;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
 
     /* Scrollable Content Container */
@@ -299,38 +342,6 @@
       line-height: 1.9;
       font-size: 2.2rem;
       font-weight: 600;
-    }
-
-    /* Shortcuts helper footer */
-    .shortcuts-hint {
-      margin-top: 14px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-align: center;
-    }
-    .shortcuts-hint kbd {
-      background: #11141c;
-      padding: 2px 6px;
-      border-radius: 4px;
-      border: 1px solid var(--panel-border);
-      color: #fff;
-    }
-
-    .app-footer {
-      text-align: center;
-      margin-top: 28px;
-      padding: 16px 0;
-      color: var(--text-muted);
-      font-size: 0.88rem;
-    }
-    .app-footer a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .app-footer a:hover {
-      text-decoration: underline;
-      color: var(--accent-hover);
     }
   </style>
 </head>
@@ -393,11 +404,12 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       <div class="shortcuts-hint">
         Keyboard controls inside Prompter: <kbd>Space</kbd> Play/Pause &bull; <kbd>▲</kbd>/<kbd>▼</kbd> Speed &bull; <kbd>M</kbd> Mirror &bull; <kbd>Esc</kbd> Exit
       </div>
-    </div>
 
-    <footer class="app-footer">
-      <p>Created with ❤️ by <a href="https://github.com/alarmistwaled" target="_blank" rel="noopener noreferrer">alarmistwaled</a> &bull; <a href="https://github.com/alarmistwaled/teleprompter" target="_blank" rel="noopener noreferrer">GitHub</a></p>
-    </footer>
+      <!-- Footer Alarmistwaled -->
+      <footer class="app-footer">
+        Created by <a href="https://github.com/alarmistwaled" target="_blank" rel="noopener noreferrer">alarmistwaled</a> &bull; Hosted on <a href="https://github.com/alarmistwaled/teleprompter" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </footer>
+    </div>
   </main>
 
   <!-- 2. FULLSCREEN TELEPROMPTER SCREEN -->
@@ -473,7 +485,7 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       prompterText.style.fontSize = currentFontSize + 'px';
       prompterText.style.fontFamily = document.getElementById('fontFamilySelect').value;
 
-      // Theme
+      // Theme & Eyeline
       applyTheme(document.getElementById('themeSelect').value);
 
       // Speed
@@ -515,10 +527,8 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       if (scrollTimer) clearInterval(scrollTimer);
 
       scrollTimer = setInterval(() => {
-        // Multiplier calculation for smooth scrolling
         prompterScreen.scrollTop += (speed * 0.6);
 
-        // Check if reached the end
         if (prompterScreen.scrollTop + prompterScreen.clientHeight >= prompterScreen.scrollHeight - 5) {
           pause();
         }
@@ -541,7 +551,7 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       speed = parseInt(val);
       prompterSpeed.value = speed;
       prompterSpeedVal.innerText = speed + 'x';
-      if (isPlaying) play(); // re-trigger with new speed
+      if (isPlaying) play();
     }
 
     function adjustSize(delta) {
@@ -555,19 +565,38 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
     }
 
     function applyTheme(theme) {
+      const rootStyle = document.documentElement.style;
+
       if (theme === 'warm') {
         prompterScreen.style.background = '#1a140f';
         prompterText.style.color = '#ffd885';
+        rootStyle.setProperty('--eyeline-color', '#fbbf24');
+        rootStyle.setProperty('--eyeline-glow', 'rgba(251, 191, 36, 0.85)');
+        rootStyle.setProperty('--eyeline-badge-bg', '#fbbf24');
+        rootStyle.setProperty('--eyeline-badge-text', '#1a140f');
       } else if (theme === 'green') {
         prompterScreen.style.background = '#000000';
         prompterText.style.color = '#39ff14';
+        rootStyle.setProperty('--eyeline-color', '#39ff14');
+        rootStyle.setProperty('--eyeline-glow', 'rgba(57, 255, 20, 0.85)');
+        rootStyle.setProperty('--eyeline-badge-bg', '#39ff14');
+        rootStyle.setProperty('--eyeline-badge-text', '#000000');
       } else if (theme === 'light') {
+        // Tema Putih: Garis eyeline gelap pekat & lencana hitam (kontras tinggi, bukan kuning)
         prompterScreen.style.background = '#ffffff';
         prompterText.style.color = '#000000';
+        rootStyle.setProperty('--eyeline-color', '#0f172a');
+        rootStyle.setProperty('--eyeline-glow', 'rgba(15, 23, 42, 0.35)');
+        rootStyle.setProperty('--eyeline-badge-bg', '#0f172a');
+        rootStyle.setProperty('--eyeline-badge-text', '#ffffff');
       } else {
-        // dark default
+        // Tema Gelap Asal: Emas terang berkilau
         prompterScreen.style.background = '#000000';
         prompterText.style.color = '#ffffff';
+        rootStyle.setProperty('--eyeline-color', '#f59e0b');
+        rootStyle.setProperty('--eyeline-glow', 'rgba(245, 158, 11, 0.9)');
+        rootStyle.setProperty('--eyeline-badge-bg', '#f59e0b');
+        rootStyle.setProperty('--eyeline-badge-text', '#000000');
       }
     }
 
@@ -580,7 +609,7 @@ First and foremost, let us acknowledge the hard work and dedication each member 
 
 When we set out on this path, our primary objective was simple: build solutions that endure, foster meaningful relationships, and continuously raise our own standard of excellence.
 
-As we look toward the year ahead, we are not just keeping pace with expectations—we are setting the benchmark.
+As we look toward the year ahead, we are not just keeping pace with expectations-we are setting the benchmark.
 
 Thank you once again for your unwavering commitment, and let us make this next chapter our finest one yet!`;
       localStorage.setItem('universal_prompter_text', scriptInput.value);
