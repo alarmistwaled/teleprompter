@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Web Teleprompter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f1117;
+      --panel-bg: #1a1d27;
+      --panel-border: #2a2f42;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --btn-bg: #272c3d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Setup / Editor Screen */
+    #setupScreen {
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 20px;
+      flex: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    p.subtext {
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    .editor-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+    }
+
+    textarea {
+      width: 100%;
+      height: 380px;
+      background: #11141c;
+      color: #fff;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+    .option-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .option-item select,
+    .option-item input[type="range"] {
+      background: #11141c;
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      flex: 1 1 200px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--btn-bg);
+      color: #fff;
+      border: 1px solid var(--panel-border);
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #33394e;
+    }
+
+    /* TELEPROMPTER FULLSCREEN OVERLAY */
+    #prompterScreen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #fff;
+      z-index: 1000;
+      overflow-y: scroll;
+      scroll-behavior: smooth;
+    }
+
+    #prompterScreen.mirror {
+      transform: scaleX(-1);
+    }
+
+    /* Control Bar Floating */
+    .prompter-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 17, 23, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      z-index: 2000;
+    }
+
+    /* Counter-mirror the controls so buttons remain readable */
+    #prompterScreen.mirror .prompter-nav {
+      transform: scaleX(-1);
+    }
+
+    .prompter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .p-btn {
+      background: var(--btn-bg);
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .p-btn:hover {
+      background: #33394e;
+      border-color: #555e7d;
+    }
+
+    .p-btn-accent {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    .p-btn-accent:hover {
+      background: var(--accent-hover);
+    }
+
+    .p-btn-danger {
+      background: #dc2626;
+      border-color: #ef4444;
+      color: #fff;
+    }
+
+    .prompter-speed {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .prompter-speed input[type="range"] {
+      width: 90px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Eye-line indicator marker */
+    .eyeline-guide {
+      position: fixed;
+      top: 35%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.35) 15%, rgba(245, 158, 11, 0.35) 85%, transparent);
+      pointer-events: none;
+      z-index: 1500;
+    }
+
+    .eyeline-guide::after {
+      content: "EYELINE";
+      position: absolute;
+      right: 20px;
+      top: -10px;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      color: rgba(245, 158, 11, 0.5);
+      font-weight: 800;
+    }
+
+    /* Scrollable Content Container */
+    .prompter-scroll-body {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40vh 24px 70vh 24px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.9;
+      font-size: 2.2rem;
+      font-weight: 600;
+    }
+
+    /* Shortcuts helper footer */
+    .shortcuts-hint {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .shortcuts-hint kbd {
+      background: #11141c;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--panel-border);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. TEXT INPUT & SETUP SCREEN -->
+  <main id="setupScreen">
+    <header>
+      <h1>Universal <span>Teleprompter</span></h1>
+      <p class="subtext">Paste or type your script below, configure settings, and launch instantly.</p>
+    </header>
+
+    <div class="editor-card">
+      <label for="scriptInput">Your Script / Speech Content:</label>
+      <textarea id="scriptInput" placeholder="Paste your text, speech, presentation notes, or cue lines here...
+
+Tip: You can use spaces and line breaks freely. Once launched, the text will scroll smoothly at your preferred pace."></textarea>
+
+      <div class="options-grid">
+        <div class="option-item">
+          <label for="themeSelect">Color Theme</label>
+          <select id="themeSelect">
+            <option value="dark">Classic (Black / White)</option>
+            <option value="warm">Warm Gold (Charcoal / Gold)</option>
+            <option value="green">Broadcast (Black / High-Vis Green)</option>
+            <option value="light">Inverted (White / Black)</option>
+          </select>
+        </div>
+
+        <div class="option-item">
+          <label for="defaultSpeed">Initial Speed (<span id="speedPreview">3x</span>)</label>
+          <input type="range" id="defaultSpeed" min="1" max="10" value="3" oninput="document.getElementById('speedPreview').innerText = this.value + 'x'">
+        </div>
+
+        <div class="option-item">
+          <label for="defaultFontSize">Font Size (<span id="sizePreview">36px</span>)</label>
+          <input type="range" id="defaultFontSize" min="22" max="64" value="36" oninput="document.getElementById('sizePreview').innerText = this.value + 'px'">
+        </div>
+
+        <div class="option-item">
+          <label for="fontFamilySelect">Font Style</label>
+          <select id="fontFamilySelect">
+            <option value="'Plus Jakarta Sans', sans-serif">Clean Sans-Serif</option>
+            <option value="system-ui, sans-serif">System UI</option>
+            <option value="Georgia, serif">Classic Serif</option>
+            <option value="'Courier New', monospace">Monospace</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" onclick="startPrompter()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Launch Teleprompter
+        </button>
+        <button class="btn-secondary" onclick="loadSampleText()">Load Sample</button>
+        <button class="btn-secondary" onclick="clearText()">Clear</button>
+      </div>
+
+      <div class="shortcuts-hint">
+        Keyboard controls inside Prompter: <kbd>Space</kbd> Play/Pause &bull; <kbd>▲</kbd>/<kbd>▼</kbd> Speed &bull; <kbd>M</kbd> Mirror &bull; <kbd>Esc</kbd> Exit
+      </div>
+    </div>
+  </main>
+
+  <!-- 2. FULLSCREEN TELEPROMPTER SCREEN -->
+  <div id="prompterScreen">
+    <div class="eyeline-guide" id="eyeline"></div>
+
+    <nav class="prompter-nav" id="prompterNav">
+      <div class="prompter-group">
+        <button class="p-btn p-btn-accent" id="playToggleBtn" onclick="togglePlay()">
+          ▶ Start
+        </button>
+        <button class="p-btn" onclick="rewindPrompter()">⏮ Rewind</button>
+      </div>
+
+      <div class="prompter-speed">
+        <span>Speed:</span>
+        <input type="range" id="prompterSpeed" min="1" max="10" value="3" onchange="changeSpeed(this.value)">
+        <span id="prompterSpeedVal" style="color:#fff; min-width:24px;">3x</span>
+      </div>
+
+      <div class="prompter-group">
+        <button class="p-btn" onclick="adjustSize(-2)" title="Smaller font">A-</button>
+        <button class="p-btn" onclick="adjustSize(2)" title="Larger font">A+</button>
+        <button class="p-btn" id="mirrorBtn" onclick="toggleMirror()" title="Flip horizontally for teleprompter glass rigs">🪞 Mirror</button>
+        <button class="p-btn p-btn-danger" onclick="exitPrompter()">✕ Exit</button>
+      </div>
+    </nav>
+
+    <div class="prompter-scroll-body" id="prompterText"></div>
+  </div>
+
+  <script>
+    // State
+    let isPlaying = false;
+    let scrollTimer = null;
+    let speed = 3;
+    let currentFontSize = 36;
+    let isMirrored = false;
+
+    // Elements
+    const setupScreen = document.getElementById('setupScreen');
+    const prompterScreen = document.getElementById('prompterScreen');
+    const scriptInput = document.getElementById('scriptInput');
+    const prompterText = document.getElementById('prompterText');
+    const playToggleBtn = document.getElementById('playToggleBtn');
+    const prompterSpeed = document.getElementById('prompterSpeed');
+    const prompterSpeedVal = document.getElementById('prompterSpeedVal');
+
+    // Restore text from localStorage if available
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('universal_prompter_text');
+      if (saved) scriptInput.value = saved;
+    });
+
+    // Save auto
+    scriptInput.addEventListener('input', () => {
+      localStorage.setItem('universal_prompter_text', scriptInput.value);
+    });
+
+    function startPrompter() {
+      const rawText = scriptInput.value.trim();
+      if (!rawText) {
+        alert("Please enter or paste your script text first!");
+        scriptInput.focus();
+        return;
+      }
+
+      // Populate text
+      prompterText.textContent = rawText;
+
+      // Font style & size
+      currentFontSize = parseInt(document.getElementById('defaultFontSize').value);
+      prompterText.style.fontSize = currentFontSize + 'px';
+      prompterText.style.fontFamily = document.getElementById('fontFamilySelect').value;
+
+      // Theme
+      applyTheme(document.getElementById('themeSelect').value);
+
+      // Speed
+      speed = parseInt(document.getElementById('defaultSpeed').value);
+      prompterSpeed.value = speed;
+      prompterSpeedVal.innerText = speed + 'x';
+
+      // Switch views
+      setupScreen.style.display = 'none';
+      prompterScreen.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      prompterScreen.scrollTop = 0;
+
+      // Reset playback state
+      pause();
+    }
+
+    function exitPrompter() {
+      pause();
+      prompterScreen.style.display = 'none';
+      setupScreen.style.display = 'block';
+      document.body.style.overflow = 'auto';
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        pause();
+      } else {
+        play();
+      }
+    }
+
+    function play() {
+      isPlaying = true;
+      playToggleBtn.innerHTML = '⏸ Pause';
+      playToggleBtn.classList.remove('p-btn-accent');
+      playToggleBtn.classList.add('p-btn');
+
+      if (scrollTimer) clearInterval(scrollTimer);
+
+      scrollTimer = setInterval(() => {
+        // Multiplier calculation for smooth scrolling
+        prompterScreen.scrollTop += (speed * 0.6);
+
+        // Check if reached the end
+        if (prompterScreen.scrollTop + prompterScreen.clientHeight >= prompterScreen.scrollHeight - 5) {
+          pause();
+        }
+      }, 25);
+    }
+
+    function pause() {
+      isPlaying = false;
+      playToggleBtn.innerHTML = '▶ Play';
+      playToggleBtn.classList.add('p-btn-accent');
+      if (scrollTimer) clearInterval(scrollTimer);
+    }
+
+    function rewindPrompter() {
+      pause();
+      prompterScreen.scrollTop = 0;
+    }
+
+    function changeSpeed(val) {
+      speed = parseInt(val);
+      prompterSpeed.value = speed;
+      prompterSpeedVal.innerText = speed + 'x';
+      if (isPlaying) play(); // re-trigger with new speed
+    }
+
+    function adjustSize(delta) {
+      currentFontSize = Math.min(80, Math.max(18, currentFontSize + delta));
+      prompterText.style.fontSize = currentFontSize + 'px';
+    }
+
+    function toggleMirror() {
+      isMirrored = !isMirrored;
+      prompterScreen.classList.toggle('mirror', isMirrored);
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'warm') {
+        prompterScreen.style.background = '#1a140f';
+        prompterText.style.color = '#ffd885';
+      } else if (theme === 'green') {
+        prompterScreen.style.background = '#000000';
+        prompterText.style.color = '#39ff14';
+      } else if (theme === 'light') {
+        prompterScreen.style.background = '#ffffff';
+        prompterText.style.color = '#000000';
+      } else {
+        // dark default
+        prompterScreen.style.background = '#000000';
+        prompterText.style.color = '#ffffff';
+      }
+    }
+
+    function loadSampleText() {
+      scriptInput.value = `Good morning everyone, and thank you for being here today.
+
+It is a privilege to stand before you to discuss the vision, milestones, and collective goals that define our journey moving forward.
+
+First and foremost, let us acknowledge the hard work and dedication each member has brought to this table over the past twelve months.
+
+When we set out on this path, our primary objective was simple: build solutions that endure, foster meaningful relationships, and continuously raise our own standard of excellence.
+
+As we look toward the year ahead, we are not just keeping pace with expectations—we are setting the benchmark.
+
+Thank you once again for your unwavering commitment, and let us make this next chapter our finest one yet!`;
+      localStorage.setItem('universal_prompter_text', scriptInput.value);
+    }
+
+    function clearText() {
+      if (confirm("Are you sure you want to clear your script?")) {
+        scriptInput.value = '';
+        localStorage.removeItem('universal_prompter_text');
+      }
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (prompterScreen.style.display !== 'block') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        changeSpeed(Math.min(10, speed + 1));
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        changeSpeed(Math.max(1, speed - 1));
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleMirror();
+      } else if (e.code === 'Escape') {
+        exitPrompter();
+      }
+    });
+  </script>
+</body>
+</html>
