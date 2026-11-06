@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Universal Web Teleprompter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,15 +29,18 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
       background: var(--bg-dark);
       color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
+      -webkit-text-size-adjust: 100%;
     }
 
     /* Setup / Editor Screen */
@@ -45,17 +48,17 @@
       max-width: 900px;
       width: 100%;
       margin: 0 auto;
-      padding: 32px 20px;
+      padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)) 16px;
       flex: 1;
     }
 
     header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 1.85rem;
       font-weight: 800;
       letter-spacing: -0.5px;
       color: #fff;
@@ -68,14 +71,14 @@
     p.subtext {
       color: var(--text-muted);
       margin-top: 6px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .editor-card {
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
 
@@ -83,24 +86,25 @@
       display: block;
       font-weight: 600;
       margin-bottom: 8px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: #e5e7eb;
     }
 
     textarea {
       width: 100%;
-      height: 380px;
+      height: 320px;
       background: #11141c;
       color: #fff;
       border: 1px solid var(--panel-border);
       border-radius: 12px;
-      padding: 16px;
-      font-size: 1.05rem;
-      line-height: 1.7;
+      padding: 14px;
+      font-size: 1rem;
+      line-height: 1.6;
       font-family: inherit;
       resize: vertical;
       outline: none;
       transition: border-color 0.2s;
+      -webkit-appearance: none;
     }
 
     textarea:focus {
@@ -109,10 +113,10 @@
 
     .options-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-      padding-top: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+      padding-top: 18px;
       border-top: 1px solid var(--panel-border);
     }
 
@@ -129,14 +133,24 @@
       color: #fff;
       padding: 10px;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       outline: none;
+      -webkit-appearance: none;
+    }
+
+    .option-item select {
+      cursor: pointer;
+    }
+
+    .option-item input[type="range"] {
+      accent-color: var(--accent);
+      height: 36px;
     }
 
     .actions {
       display: flex;
-      gap: 12px;
-      margin-top: 24px;
+      gap: 10px;
+      margin-top: 20px;
       flex-wrap: wrap;
     }
 
@@ -145,16 +159,17 @@
       background: var(--accent);
       color: #000;
       border: none;
-      padding: 14px 24px;
+      padding: 14px 20px;
       border-radius: 10px;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       transition: background 0.2s;
+      touch-action: manipulation;
     }
 
     .btn-primary:hover {
@@ -165,11 +180,13 @@
       background: var(--btn-bg);
       color: #fff;
       border: 1px solid var(--panel-border);
-      padding: 14px 20px;
+      padding: 14px 18px;
       border-radius: 10px;
       font-weight: 600;
+      font-size: 0.95rem;
       cursor: pointer;
       transition: background 0.2s;
+      touch-action: manipulation;
     }
 
     .btn-secondary:hover {
@@ -178,9 +195,10 @@
 
     .shortcuts-hint {
       margin-top: 16px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       text-align: center;
+      line-height: 1.5;
     }
     .shortcuts-hint kbd {
       background: #11141c;
@@ -209,20 +227,21 @@
       color: var(--accent-hover);
     }
 
-    /* TELEPROMPTER FULLSCREEN OVERLAY */
+    /* TELEPROMPTER FULLSCREEN OVERLAY - Khas Safari & Mudah Alih */
     #prompterScreen {
       display: none;
       position: fixed;
       inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      height: -webkit-fill-available;
       background: #000;
       color: #fff;
       z-index: 1000;
-      overflow-y: scroll;
-      scroll-behavior: smooth;
-    }
-
-    #prompterScreen.mirror {
-      transform: scaleX(-1);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: auto;
+      touch-action: pan-y;
     }
 
     /* Control Bar Floating */
@@ -231,46 +250,43 @@
       top: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 17, 23, 0.92);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 12px 20px;
+      background: rgba(15, 17, 23, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       flex-wrap: wrap;
       z-index: 2000;
-    }
-
-    #prompterScreen.mirror .prompter-nav {
-      transform: scaleX(-1);
     }
 
     .prompter-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .p-btn {
       background: var(--btn-bg);
       border: 1px solid var(--panel-border);
       color: #fff;
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.15s;
+      touch-action: manipulation;
     }
 
-    .p-btn:hover {
+    .p-btn:hover, .p-btn:active {
       background: #33394e;
-      border-color: #555e7d;
     }
 
     .p-btn-accent {
@@ -279,7 +295,7 @@
       border-color: var(--accent);
     }
 
-    .p-btn-accent:hover {
+    .p-btn-accent:hover, .p-btn-accent:active {
       background: var(--accent-hover);
     }
 
@@ -292,19 +308,19 @@
     .prompter-speed {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
+      gap: 6px;
+      font-size: 0.82rem;
       font-weight: 600;
       color: var(--text-muted);
     }
 
     .prompter-speed input[type="range"] {
-      width: 90px;
+      width: 80px;
       accent-color: var(--accent);
       cursor: pointer;
     }
 
-    /* Penunjuk Eyeline - Lebih Tebal (4px), Berkilau & Kontras Tinggi */
+    /* Penunjuk Eyeline - Tebal (4px), Berkilau & Kontras Tinggi */
     .eyeline-guide {
       position: fixed;
       top: 35%;
@@ -320,13 +336,13 @@
     .eyeline-guide::after {
       content: "EYELINE ◄";
       position: absolute;
-      right: 20px;
+      right: max(16px, env(safe-area-inset-right));
       top: -12px;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       letter-spacing: 1.5px;
       background: var(--eyeline-badge-bg);
       color: var(--eyeline-badge-text);
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 5px;
       font-weight: 800;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -336,12 +352,55 @@
     .prompter-scroll-body {
       max-width: 960px;
       margin: 0 auto;
-      padding: 40vh 24px 70vh 24px;
+      padding: 38vh 20px 70vh 20px;
       white-space: pre-wrap;
       word-break: break-word;
       line-height: 1.9;
       font-size: 2.2rem;
       font-weight: 600;
+      transition: transform 0.15s ease-out;
+    }
+
+    /* Efek cermin terus pada teks agar skrol Safari tidak terjejas */
+    .prompter-scroll-body.mirror {
+      transform: scaleX(-1);
+    }
+
+    .mobile-tap-tip {
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #bbb;
+      pointer-events: none;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 1.5rem; }
+      .editor-card { padding: 16px; }
+      textarea { height: 260px; font-size: 0.95rem; }
+      .prompter-nav {
+        gap: 6px;
+        justify-content: center;
+      }
+      .prompter-speed input[type="range"] {
+        width: 65px;
+      }
+      .p-btn {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+      }
+      .prompter-scroll-body {
+        padding: 35vh 16px 70vh 16px;
+      }
     }
   </style>
 </head>
@@ -358,7 +417,7 @@
       <label for="scriptInput">Your Script / Speech Content:</label>
       <textarea id="scriptInput" placeholder="Paste your text, speech, presentation notes, or cue lines here...
 
-Tip: You can use spaces and line breaks freely. Once launched, the text will scroll smoothly at your preferred pace."></textarea>
+Tip: You can use spaces and line breaks freely. Once launched, tap anywhere or press Space to scroll."></textarea>
 
       <div class="options-grid">
         <div class="option-item">
@@ -378,14 +437,14 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
 
         <div class="option-item">
           <label for="defaultFontSize">Font Size (<span id="sizePreview">36px</span>)</label>
-          <input type="range" id="defaultFontSize" min="22" max="64" value="36" oninput="document.getElementById('sizePreview').innerText = this.value + 'px'">
+          <input type="range" id="defaultFontSize" min="20" max="64" value="36" oninput="document.getElementById('sizePreview').innerText = this.value + 'px'">
         </div>
 
         <div class="option-item">
           <label for="fontFamilySelect">Font Style</label>
           <select id="fontFamilySelect">
             <option value="'Plus Jakarta Sans', sans-serif">Clean Sans-Serif</option>
-            <option value="system-ui, sans-serif">System UI</option>
+            <option value="-apple-system, system-ui, sans-serif">System UI</option>
             <option value="Georgia, serif">Classic Serif</option>
             <option value="'Courier New', monospace">Monospace</option>
           </select>
@@ -402,10 +461,9 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       </div>
 
       <div class="shortcuts-hint">
-        Keyboard controls inside Prompter: <kbd>Space</kbd> Play/Pause &bull; <kbd>▲</kbd>/<kbd>▼</kbd> Speed &bull; <kbd>M</kbd> Mirror &bull; <kbd>Esc</kbd> Exit
+        Controls: <kbd>Space</kbd> / <b>Tap Screen</b> to Play/Pause &bull; <kbd>▲</kbd>/<kbd>▼</kbd> Speed &bull; <kbd>M</kbd> Mirror &bull; <kbd>Esc</kbd> Exit
       </div>
 
-      <!-- Footer Alarmistwaled -->
       <footer class="app-footer">
         Created by <a href="https://github.com/alarmistwaled" target="_blank" rel="noopener noreferrer">alarmistwaled</a> &bull; Hosted on <a href="https://github.com/alarmistwaled/teleprompter" target="_blank" rel="noopener noreferrer">GitHub</a>
       </footer>
@@ -418,56 +476,84 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
 
     <nav class="prompter-nav" id="prompterNav">
       <div class="prompter-group">
-        <button class="p-btn p-btn-accent" id="playToggleBtn" onclick="togglePlay()">
+        <button class="p-btn p-btn-accent" id="playToggleBtn" onclick="togglePlay(event)">
           ▶ Start
         </button>
-        <button class="p-btn" onclick="rewindPrompter()">⏮ Rewind</button>
+        <button class="p-btn" onclick="rewindPrompter(event)">⏮ Rewind</button>
       </div>
 
       <div class="prompter-speed">
         <span>Speed:</span>
-        <input type="range" id="prompterSpeed" min="1" max="10" value="3" onchange="changeSpeed(this.value)">
-        <span id="prompterSpeedVal" style="color:#fff; min-width:24px;">3x</span>
+        <input type="range" id="prompterSpeed" min="1" max="10" value="3" oninput="changeSpeed(this.value)">
+        <span id="prompterSpeedVal" style="color:#fff; min-width:20px;">3x</span>
       </div>
 
       <div class="prompter-group">
-        <button class="p-btn" onclick="adjustSize(-2)" title="Smaller font">A-</button>
-        <button class="p-btn" onclick="adjustSize(2)" title="Larger font">A+</button>
-        <button class="p-btn" id="mirrorBtn" onclick="toggleMirror()" title="Flip horizontally for teleprompter glass rigs">🪞 Mirror</button>
-        <button class="p-btn p-btn-danger" onclick="exitPrompter()">✕ Exit</button>
+        <button class="p-btn" onclick="adjustSize(-2, event)" title="Smaller font">A-</button>
+        <button class="p-btn" onclick="adjustSize(2, event)" title="Larger font">A+</button>
+        <button class="p-btn" id="mirrorBtn" onclick="toggleMirror(event)" title="Flip horizontally">🪞 Mirror</button>
+        <button class="p-btn p-btn-danger" onclick="exitPrompter(event)">✕</button>
       </div>
     </nav>
 
     <div class="prompter-scroll-body" id="prompterText"></div>
+    <div class="mobile-tap-tip" id="tapTip">Tap screen to Play / Pause</div>
   </div>
 
   <script>
     // State
     let isPlaying = false;
-    let scrollTimer = null;
+    let animFrameId = null;
+    let lastTimestamp = 0;
+    let scrollPos = 0;
     let speed = 3;
     let currentFontSize = 36;
     let isMirrored = false;
+    let wakeLock = null;
 
     // Elements
     const setupScreen = document.getElementById('setupScreen');
     const prompterScreen = document.getElementById('prompterScreen');
+    const prompterNav = document.getElementById('prompterNav');
     const scriptInput = document.getElementById('scriptInput');
     const prompterText = document.getElementById('prompterText');
     const playToggleBtn = document.getElementById('playToggleBtn');
     const prompterSpeed = document.getElementById('prompterSpeed');
     const prompterSpeedVal = document.getElementById('prompterSpeedVal');
+    const tapTip = document.getElementById('tapTip');
 
-    // Restore text from localStorage if available
+    // Safe localStorage restoration
     window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('universal_prompter_text');
-      if (saved) scriptInput.value = saved;
+      try {
+        const saved = localStorage.getItem('universal_prompter_text');
+        if (saved) scriptInput.value = saved;
+      } catch (e) {}
     });
 
-    // Save auto
+    // Auto save with exception safety
     scriptInput.addEventListener('input', () => {
-      localStorage.setItem('universal_prompter_text', scriptInput.value);
+      try {
+        localStorage.setItem('universal_prompter_text', scriptInput.value);
+      } catch (e) {}
     });
+
+    // Screen Wake Lock API (keeps iPhone screen on)
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (e) {}
+    }
+
+    function releaseWakeLock() {
+      try {
+        if (wakeLock) {
+          wakeLock.release();
+          wakeLock = null;
+        }
+      } catch (e) {}
+    }
 
     function startPrompter() {
       const rawText = scriptInput.value.trim();
@@ -481,7 +567,7 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       prompterText.textContent = rawText;
 
       // Font style & size
-      currentFontSize = parseInt(document.getElementById('defaultFontSize').value);
+      currentFontSize = parseInt(document.getElementById('defaultFontSize').value) || 36;
       prompterText.style.fontSize = currentFontSize + 'px';
       prompterText.style.fontFamily = document.getElementById('fontFamilySelect').value;
 
@@ -489,7 +575,7 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       applyTheme(document.getElementById('themeSelect').value);
 
       // Speed
-      speed = parseInt(document.getElementById('defaultSpeed').value);
+      speed = parseInt(document.getElementById('defaultSpeed').value) || 3;
       prompterSpeed.value = speed;
       prompterSpeedVal.innerText = speed + 'x';
 
@@ -497,20 +583,32 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
       setupScreen.style.display = 'none';
       prompterScreen.style.display = 'block';
       document.body.style.overflow = 'hidden';
+
+      // Reset scroll position
+      scrollPos = 0;
       prompterScreen.scrollTop = 0;
 
-      // Reset playback state
+      // Reset mirror state
+      isMirrored = false;
+      prompterText.classList.remove('mirror');
+
+      // Show brief tap tip on mobile
+      tapTip.style.opacity = '1';
+      setTimeout(() => { tapTip.style.opacity = '0'; }, 2500);
+
       pause();
     }
 
-    function exitPrompter() {
+    function exitPrompter(e) {
+      if (e) e.stopPropagation();
       pause();
       prompterScreen.style.display = 'none';
       setupScreen.style.display = 'block';
       document.body.style.overflow = 'auto';
     }
 
-    function togglePlay() {
+    function togglePlay(e) {
+      if (e) e.stopPropagation();
       if (isPlaying) {
         pause();
       } else {
@@ -519,49 +617,92 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
     }
 
     function play() {
+      if (isPlaying) return;
       isPlaying = true;
+      lastTimestamp = 0;
+      scrollPos = prompterScreen.scrollTop; // synchronize with current position
+
       playToggleBtn.innerHTML = '⏸ Pause';
       playToggleBtn.classList.remove('p-btn-accent');
       playToggleBtn.classList.add('p-btn');
 
-      if (scrollTimer) clearInterval(scrollTimer);
-
-      scrollTimer = setInterval(() => {
-        prompterScreen.scrollTop += (speed * 0.6);
-
-        if (prompterScreen.scrollTop + prompterScreen.clientHeight >= prompterScreen.scrollHeight - 5) {
-          pause();
-        }
-      }, 25);
+      requestWakeLock();
+      animFrameId = requestAnimationFrame(scrollLoop);
     }
 
     function pause() {
       isPlaying = false;
-      playToggleBtn.innerHTML = '▶ Play';
+      playToggleBtn.innerHTML = '▶ Start';
       playToggleBtn.classList.add('p-btn-accent');
-      if (scrollTimer) clearInterval(scrollTimer);
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      releaseWakeLock();
     }
 
-    function rewindPrompter() {
+    // High performance animation loop optimized for iOS Safari
+    function scrollLoop(timestamp) {
+      if (!isPlaying) return;
+
+      if (!lastTimestamp) {
+        lastTimestamp = timestamp;
+      }
+      const deltaTime = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      // Smooth pixels per second calculation
+      const pixelsPerSec = 15 + (speed * 20);
+      scrollPos += pixelsPerSec * deltaTime;
+
+      prompterScreen.scrollTop = scrollPos;
+
+      // Stop when reaching the end of text
+      const maxScroll = prompterScreen.scrollHeight - prompterScreen.clientHeight;
+      if (scrollPos >= maxScroll - 5) {
+        pause();
+        return;
+      }
+
+      animFrameId = requestAnimationFrame(scrollLoop);
+    }
+
+    // Keep internal scrollPos in sync when user manually touches/drags on iPhone
+    prompterScreen.addEventListener('scroll', () => {
+      if (Math.abs(prompterScreen.scrollTop - scrollPos) > 4) {
+        scrollPos = prompterScreen.scrollTop;
+      }
+    }, { passive: true });
+
+    // Tap anywhere on prompter screen to toggle Play/Pause (Mobile friendly)
+    prompterScreen.addEventListener('click', (e) => {
+      if (prompterNav.contains(e.target)) return;
+      togglePlay();
+    });
+
+    function rewindPrompter(e) {
+      if (e) e.stopPropagation();
       pause();
+      scrollPos = 0;
       prompterScreen.scrollTop = 0;
     }
 
     function changeSpeed(val) {
-      speed = parseInt(val);
+      speed = parseInt(val) || 3;
       prompterSpeed.value = speed;
       prompterSpeedVal.innerText = speed + 'x';
-      if (isPlaying) play();
     }
 
-    function adjustSize(delta) {
-      currentFontSize = Math.min(80, Math.max(18, currentFontSize + delta));
+    function adjustSize(delta, e) {
+      if (e) e.stopPropagation();
+      currentFontSize = Math.min(72, Math.max(18, currentFontSize + delta));
       prompterText.style.fontSize = currentFontSize + 'px';
     }
 
-    function toggleMirror() {
+    function toggleMirror(e) {
+      if (e) e.stopPropagation();
       isMirrored = !isMirrored;
-      prompterScreen.classList.toggle('mirror', isMirrored);
+      prompterText.classList.toggle('mirror', isMirrored);
     }
 
     function applyTheme(theme) {
@@ -582,7 +723,6 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
         rootStyle.setProperty('--eyeline-badge-bg', '#39ff14');
         rootStyle.setProperty('--eyeline-badge-text', '#000000');
       } else if (theme === 'light') {
-        // Tema Putih: Garis eyeline gelap pekat & lencana hitam (kontras tinggi, bukan kuning)
         prompterScreen.style.background = '#ffffff';
         prompterText.style.color = '#000000';
         rootStyle.setProperty('--eyeline-color', '#0f172a');
@@ -590,7 +730,6 @@ Tip: You can use spaces and line breaks freely. Once launched, the text will scr
         rootStyle.setProperty('--eyeline-badge-bg', '#0f172a');
         rootStyle.setProperty('--eyeline-badge-text', '#ffffff');
       } else {
-        // Tema Gelap Asal: Emas terang berkilau
         prompterScreen.style.background = '#000000';
         prompterText.style.color = '#ffffff';
         rootStyle.setProperty('--eyeline-color', '#f59e0b');
@@ -612,17 +751,20 @@ When we set out on this path, our primary objective was simple: build solutions 
 As we look toward the year ahead, we are not just keeping pace with expectations-we are setting the benchmark.
 
 Thank you once again for your unwavering commitment, and let us make this next chapter our finest one yet!`;
-      localStorage.setItem('universal_prompter_text', scriptInput.value);
+      try {
+        localStorage.setItem('universal_prompter_text', scriptInput.value);
+      } catch (e) {}
     }
 
     function clearText() {
       if (confirm("Are you sure you want to clear your script?")) {
         scriptInput.value = '';
-        localStorage.removeItem('universal_prompter_text');
+        try {
+          localStorage.removeItem('universal_prompter_text');
+        } catch (e) {}
       }
     }
 
-    // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (prompterScreen.style.display !== 'block') return;
 
