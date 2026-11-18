@@ -217,6 +217,68 @@
       color: #fff;
     }
 
+    /* Install App button and iOS install dialog */
+    .btn-install {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-install.visible {
+      display: inline-flex;
+    }
+
+    .install-dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 16px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .install-dialog.open {
+      display: flex;
+    }
+    .install-dialog-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .install-dialog-card h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .install-dialog-card ol {
+      padding-left: 20px;
+      color: var(--text-main);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+    .install-dialog-card .ios-share-icon {
+      display: inline-block;
+      vertical-align: -3px;
+      color: #3b82f6;
+    }
+    .install-dialog-card .note {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .install-dialog-card .btn-secondary {
+      width: 100%;
+      margin-top: 16px;
+    }
+
     /* Footer di dalam kad */
     .app-footer {
       margin-top: 20px;
@@ -467,6 +529,10 @@ Tip: You can use spaces and line breaks freely. Once launched, tap anywhere or p
         </button>
         <button class="btn-secondary" onclick="loadSampleText()">Load Sample</button>
         <button class="btn-secondary" onclick="clearText()">Clear</button>
+        <button class="btn-secondary btn-install" id="installBtn" type="button" onclick="installApp()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Install App
+        </button>
       </div>
 
       <div class="shortcuts-hint">
@@ -478,6 +544,22 @@ Tip: You can use spaces and line breaks freely. Once launched, tap anywhere or p
       </footer>
     </div>
   </main>
+
+  <!-- iOS install instructions (iOS has no programmatic install prompt) -->
+  <div class="install-dialog" id="installDialog" role="dialog" aria-modal="true" aria-labelledby="installDialogTitle" onclick="if (event.target === this) closeInstallDialog()">
+    <div class="install-dialog-card">
+      <h2 id="installDialogTitle">Install Teleprompter</h2>
+      <ol>
+        <li>Tap the <b>Share</b> button
+          <svg class="ios-share-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 11v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>
+          in the browser toolbar.</li>
+        <li>Scroll down and choose <b>Add to Home Screen</b>.</li>
+        <li>Tap <b>Add</b>. The app will appear on your Home Screen.</li>
+      </ol>
+      <p class="note" id="installDialogNote">On iOS, use Safari for the most reliable install. Chrome and Edge also support this on iOS 16.4 or later.</p>
+      <button class="btn-secondary" type="button" onclick="closeInstallDialog()">Got it</button>
+    </div>
+  </div>
 
   <!-- 2. FULLSCREEN TELEPROMPTER SCREEN -->
   <div id="prompterScreen">
@@ -792,6 +874,60 @@ Thank you once again for your unwavering commitment, and let us make this next c
         exitPrompter();
       }
     });
+    // PWA: Install App button
+    let deferredInstallPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    const installDialog = document.getElementById('installDialog');
+
+    const isStandalone = () =>
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.navigator.standalone === true;
+
+    // iPadOS 13+ reports itself as macOS, so also check for touch support
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    function showInstallButton(show) {
+      installBtn.classList.toggle('visible', show && !isStandalone());
+    }
+
+    // Chromium browsers (Android, desktop) fire this when the app is installable
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      showInstallButton(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      showInstallButton(false);
+    });
+
+    // iOS never fires beforeinstallprompt, so offer manual instructions instead
+    if (isIOS) showInstallButton(true);
+
+    async function installApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        if (outcome === 'accepted') showInstallButton(false);
+        return;
+      }
+      if (isIOS) {
+        installDialog.classList.add('open');
+      }
+    }
+
+    function closeInstallDialog() {
+      installDialog.classList.remove('open');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape' && installDialog.classList.contains('open')) closeInstallDialog();
+    });
+
     // PWA: register service worker for offline use and installability
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

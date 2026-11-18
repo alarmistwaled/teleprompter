@@ -1,6 +1,6 @@
 // Service worker: precaches the app shell so the teleprompter works offline.
 // Bump CACHE_VERSION whenever index.html or other shell files change.
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const APP_CACHE = `teleprompter-app-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `teleprompter-runtime-${CACHE_VERSION}`;
 
